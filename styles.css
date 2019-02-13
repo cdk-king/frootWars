@@ -34,3 +34,15 @@
     height: 64px;
     border: 0;
 }
+/*加载画面*/
+#loadingscreen{
+    background: rgba(100, 100, 100, 0.8);
+}
+#loadingmessage{
+    margin-top: 400px;
+    text-align: center;
+    height: 48px;
+    color: white;
+    background: url(images/loader.gif) no-repeat center;
+    font: 12px Arial;
+}
