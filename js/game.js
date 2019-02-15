@@ -1,3 +1,28 @@
+(function(){
+    var lastTime = 0;
+    var vendors = ["ms","moz","webkit","0"];
+    for(var x = 0;x<vendors.length && !window.requestAnimationFrame;x++){
+        window.requestAnimationFrame = window[vendors[x]+"RequestAnimationFrame"];
+        window.cancelAnimationFrame = window[vendors[x]+"CancelRequestAnimationFrame"] || window[vendors[x]+"CannelAnimationFrame"];
+    }
+    if(!window.requestAnimationFrame){
+        window.requestAnimationFrame = function(callback,element){
+            var currTime = new Date().getTime();
+            var timeToCall = Math.max(0,16-(currTime-lastTime));
+            var id = window.setTimeout(function(){
+                callback(currTime+timeToCall);
+            },timeToCall);
+            lastTime = currTime+timeToCall;
+            return id;
+        };
+    }
+    if(!window.cancelAnimationFrame){
+        window.cancelAnimationFrame = function(id){
+            clearTimeout(id);
+        }
+    }
+}());
+
 window.addEventListener("load", function() {
     game.init();
 });
@@ -35,7 +60,41 @@ var game = {
     showLevelScreen:function(){
         game.hideScreens();
         game.showScreen("levelselectscreen");
+    },
+    //游戏阶段
+    mode:"intro",
+    //弹弓的x和y的坐标
+    slingshotX:140,
+    slingshotY:280,
+    start:function(){
+        game.hideScreens();
+        //显示游戏画布和得分
+        game.showScreen("gamecanvas");
+        game.showScreen("scorescreen");
+        game.mode = "intro";
+        game.offsetLeft = 0;
+        game.ended = false;
+        game.animationFrame = window.requestAnimationFrame(game.animate,game.canvas);
+    },
+    handlePanning:function(){
+        //移动函数，使画面向右平移
+        game.offsetLeft++;
+    },
+    animate:function(){
+        //移动背景
+        game.handlePanning();
+        //使角色移动
+        //使用视差滚动绘制背景
+        game.context.drawImage(game.currentLevel.backgroundImage,game.offsetLeft/4,0,640,480,0,0,640,480);
+        game.context.drawImage(game.currentLevel.foregroundImage,game.offsetLeft,0,640,480,0,0,640,480);
+        //绘制弹弓
+        game.context.drawImage(game.slingshotImage,game.slingshotX-game.offsetLeft,game.slingshotY);
+        game.context.drawImage(game.slingshotFrontImage,game.slingshotX-game.offsetLeft,game.slingshotY);
+        if(!game.ended){
+            game.animationFrame = window.requestAnimationFrame(game.animate,game.canvas);
+        }
     }
+
 }
 var levels = {
     //关卡数据
@@ -74,7 +133,24 @@ var levels = {
 
     },
     load:function(number){
-
+        game.currentLevel = {
+            number:number,
+            hero:[]
+        };
+        game.score = 0;
+        document.getElementById("score").innerHTML = "Score: " + game.score;
+        var level = levels.data[number];
+        //加载背景、前景和弹弓图像
+        game.currentLevel.backgroundImage = loader.loadImage("images/backgrounds/" + level.background + ".png");
+        game.currentLevel.foregroundImage = loader.loadImage("images/backgrounds/" + level.foreground + ".png");
+        game.slingshotImage = loader.loadImage("images/slingshot.png");
+        game.slingshotFrontImage = loader.loadImage("images/slingshot-front.png");
+        //一旦所有的图像加载完成，就调用game.start()函数
+        if(loader.loaded){
+            game.start();
+        }else{
+            loader.onload = game.start();
+        }
     }
 }
 var loader = {
