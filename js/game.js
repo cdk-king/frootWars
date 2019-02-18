@@ -77,9 +77,68 @@ var game = {
         game.ended = false;
         game.animationFrame = window.requestAnimationFrame(game.animate,game.canvas);
     },
+    //画面最大平移速度，单位为像素每帧
+    maxSpeed:3,
+    //画面最大和最小平移范围
+    minOffset:0,
+    maxOffset:300,
+    //画面当前平移位置
+    offsetLeft:0,
+    //游戏得分
+    score:0,
+    //画面中心移动到newCenter
+    panTo:function(newCenter){
+        var df = newCenter-game.offsetLeft-game.canvas.width/4;
+        if(Math.abs(df)>0 && game.offsetLeft <= game.maxOffset && game.offsetLeft >= game.minOffset){
+            var deltaX = Math.round(df/2);
+            if(deltaX && Math.abs(deltaX) > game.maxSpeed){
+                //Math.sign() 函数返回一个数字的符号, 指示数字是正数，负数还是零。
+                deltaX = game.maxSpeed * Math.abs(deltaX)/(deltaX);
+            }
+            game.offsetLeft += deltaX;
+        }else{
+            return true;
+        }
+        if(game.offsetLeft<game.minOffset){
+            game.offsetLeft = game.minOffset;
+            return true;
+        }
+        else if(game.offsetLeft>game.maxOffset){
+            game.offsetLeft = game.maxOffset;
+            return true;
+        }
+        return false;
+    },
     handlePanning:function(){
         //移动函数，使画面向右平移
-        game.offsetLeft++;
+        //game.offsetLeft++;
+        if(game.mode == "intro"){
+            if(game.panTo(700)){
+                game.mode = "load-next-hero";
+            }
+        }
+        if(game.mode == "wait-for-firing"){
+            if(mouse.dragging){
+                game.panTo(mouse.x+game.offsetLeft);
+            }else{
+                //弹弓位置
+                game.panTo(game.slingshotX);
+            }
+        }
+        if(game.mode == "load-next-hero"){
+            //待完成
+            //检查是否有坏蛋，如果没有，结束关卡
+            //检查是否有英雄，如果没有，结束关卡
+            //填装英雄，设置状态到wait-for-firing
+            game.mode = "wait-for-firing";
+        }
+        if(game.mode == "firing"){
+            game.panTo(game.slingshotX);
+        }
+        if(game.mode == "fired"){
+            //待完成
+            //视野移动到英雄
+        }
     },
     animate:function(){
         //移动背景
