@@ -156,7 +156,14 @@ var game = {
         //移动背景
         game.handlePanning();
 
-        //待完成：使角色移动
+        //使角色动起来
+        var currentTime = new Date().getTime();
+        var timeStep;
+        if(game.lastUpdateTime){
+            timeStep = (currentTime-game.lastUpdateTime)/1000;
+            box2d.step(timeStep);
+        }
+        game.lastUpdateTime = currentTime;
 
         //使用视差滚动绘制背景
         game.context.drawImage(game.currentLevel.backgroundImage,game.offsetLeft/4,0,640,480,0,0,640,480);
@@ -617,4 +624,13 @@ var box2d = {
         var fixture = body.CreateFixture(fixtureDef);
         return body; 
     },
+    step:function(timeStep){
+        //速度迭代数 = 8
+        //位置迭代数 = 3
+        if(timeStep > 2/60){
+            timeStep = 2/60;
+        }
+
+        box2d.world.Step(timeStep,8,3);
+    }
 }
