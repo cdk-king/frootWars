@@ -155,16 +155,28 @@ var game = {
     animate:function(){
         //移动背景
         game.handlePanning();
-        //使角色移动
+
+        //待完成：使角色移动
+
         //使用视差滚动绘制背景
         game.context.drawImage(game.currentLevel.backgroundImage,game.offsetLeft/4,0,640,480,0,0,640,480);
         game.context.drawImage(game.currentLevel.foregroundImage,game.offsetLeft,0,640,480,0,0,640,480);
         //绘制弹弓
         game.context.drawImage(game.slingshotImage,game.slingshotX-game.offsetLeft,game.slingshotY);
+
+        //绘制所有的物体
+        game.drawAllBodies();
+        
+        //再次绘制弹弓的外侧支架
         game.context.drawImage(game.slingshotFrontImage,game.slingshotX-game.offsetLeft,game.slingshotY);
+
         if(!game.ended){
             game.animationFrame = window.requestAnimationFrame(game.animate,game.canvas);
         }
+    },
+    drawAllBodies:function(){
+        box2d.world.DrawDebugData();
+        //待完成：遍历所有的物体，并在游戏canvas上绘制出来
     }
 
 }
@@ -179,18 +191,18 @@ var levels = {
                 // 地面
                 { type: "ground", name: "dirt", x: 500, y: 440, width: 1000, height: 20, isStatic: true },
                 // 弹弓木框架
-                { type: "ground", name: "wood", x: 180, y: 390, width: 40, height: 80, isStatic: true },
+                { type: "ground", name: "wood", x: 190, y: 390, width: 30, height: 80, isStatic: true },
 
-                { type: "block", name: "wood", x: 520, y: 375, angle: 90, width: 100, height: 25 },
-                { type: "block", name: "glass", x: 520, y: 275, angle: 90, width: 100, height: 25 },
-                { type: "villain", name: "burger", x: 520, y: 200, calories: 590 },
+                { type: "block", name: "wood", x: 520, y: 380, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "glass", x: 520, y: 280, angle: 90, width: 100, height: 25 },
+                { type: "villain", name: "burger", x: 520, y: 205, calories: 590 },
 
-                { type: "block", name: "wood", x: 620, y: 375, angle: 90, width: 100, height: 25 },
-                { type: "block", name: "glass", x: 620, y: 275, angle: 90, width: 100, height: 25 },
-                { type: "villain", name: "fries", x: 620, y: 200, calories: 420 },
+                { type: "block", name: "wood", x: 620, y: 380, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "glass", x: 620, y: 280, angle: 90, width: 100, height: 25 },
+                { type: "villain", name: "fries", x: 620, y: 205, calories: 420 },
                 
-                { type: "hero", name: "orange", x: 90, y: 410 },
-                { type: "hero", name: "apple", x: 150, y: 410 },
+                { type: "hero", name: "orange", x: 80, y: 405 },
+                { type: "hero", name: "apple", x: 140, y: 405 },
             ]
         },
         {
@@ -496,6 +508,23 @@ var box2d = {
         var gravity = new b2Vec2(0,9.8);//声明重力加速度为9.8m/s^2,方向向下
         var allowSleep = true;//允许静止的物体进入休眠状态，休眠物体不参与物理仿真计算
         box2d.world = new b2World(gravity,allowSleep);
+
+        //设置调试绘图
+            var debugContext = document.getElementById("debugcanvas").getContext("2d");
+            var debugDraw = new b2DebugDraw();
+            //使用canvas绘制环境来绘制调试画面
+            debugDraw.SetSprite(debugContext);
+            //设置绘图比例
+            debugDraw.SetDrawScale(box2d.scale);
+            //填充的透明度为0.3
+            debugDraw.SetFillAlpha(0.3);
+            //线条的宽度为1
+            debugDraw.SetLineThickness(1.0);
+            //绘制所有的shape和joint
+            debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+            //设置调试绘图模式
+            box2d.world.SetDebugDraw(debugDraw);
+        
     },
     createRectangle:function(entity,definition){
         var bodyDef = new b2BodyDef;
