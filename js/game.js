@@ -176,7 +176,15 @@ var game = {
     },
     drawAllBodies:function(){
         box2d.world.DrawDebugData();
-        //待完成：遍历所有的物体，并在游戏canvas上绘制出来
+        
+        //遍历所有的物体，并在游戏画面上绘制他们
+        for(var body = box2d.world.GetBodyList();body;body = body.GetNext()){
+            var entity = body.GetUserData();
+
+            if(entity){
+                entities.draw(entity,body.GetPosition(),body.GetAngle());
+            }
+        }
     }
 
 }
@@ -497,7 +505,36 @@ var entities = {
     },
     //以物体、物体的位置和角度为参数，在游戏画面中绘制物体
     draw:function(entity,position,angle){
-
+        game.context.translate(position.x*box2d.scale-game.offsetLeft,position.y*box2d.scale);
+        game.context.rotate(angle);
+        switch(entity.type){
+            case "block":
+                game.context.drawImage(entity.sprite,0,0,
+                    entity.sprite.width,entity.sprite.height,
+                    -entity.width/2-1,-entity.height/2-1,
+                    entity.width+2,entity.height+2);
+                break;
+            case "villain":
+            //后面没有加break语句相当于：if("villain" || "hero")
+            case "hero":
+                if(entity.shape == "circle"){
+                    game.context.drawImage(entity.sprite,0,0,
+                        entity.sprite.width,entity.sprite.height,
+                        -entity.radius-1,-entity.radius-1,
+                        entity.radius*2+2,entity.radius*2+2);
+                }else if(entity.shape == "rectangle"){
+                    game.context.drawImage(entity.sprite,0,0,
+                        entity.sprite.width,entity.sprite.height,
+                        -entity.width/2-1,-entity.height/2-1,
+                        entity.width+2,entity.height+2);
+                }
+                break;
+            case "ground":
+                //什么都不做，我们单独绘制地面和弹弓
+                break;
+        }
+        game.context.rotate(-angle);
+        game.context.translate(-position.x*box2d.scale+game.offsetLeft,-position.y*box2d.scale);
     }
 }
 
