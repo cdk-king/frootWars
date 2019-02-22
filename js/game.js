@@ -392,7 +392,44 @@ var entities = {
     },
     //以物体作为参数，创建一个Box2D物体，并加入世界
     create:function(entity){
-
+        var definition = entities.definitions[entity.name];
+        if(!definition){
+            console.log("没有找到该实体",entity.name);
+            return;
+        }
+        switch(entity.type){
+            case "block"://简单的矩形
+                entity.health = definition.fullHealth;
+                entity.fullHealth = definition.fullHealth;
+                entity.shape = "rectangle";
+                entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                box2d.createRectangle(entity,definition);
+                break;
+            case "ground"://简单的矩形
+                //不可摧毁物体，不必具有生命值
+                entity.shape = "rectangle",
+                //不会被画出，所以不必具有图像
+                box2d.createRectangle(entity,definition);
+                break;
+            case "hero"://简单的圆
+            case "villain"://可以是圆形或者是矩形
+                entity.health = definition.fullHealth;
+                entity.fullHealth = definition.fullHealth;
+                entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                entity.shape = definition.shape;
+                if(definition.shape == "circle"){
+                    entity.radius = definition.radius;
+                    box2d.createCircle(entity,definition);
+                }else if(definition.shape == "rectangle"){
+                    entity.width = definition.width;
+                    entity.height = definition.height;
+                    box2d.createRectangle(entity,definition);
+                }
+                break;
+            default:
+                console.log("找不到实体类型",entity.type);
+                break;
+        }
     },
     //以物体、物体的位置和角度为参数，在游戏画面中绘制物体
     draw:function(entity,position,angle){
@@ -461,5 +498,5 @@ var box2d = {
 
         var fixture = body.CreateFixture(fixtureDef);
         return body; 
-    }
+    },
 }
