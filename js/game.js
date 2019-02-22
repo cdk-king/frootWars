@@ -1,3 +1,15 @@
+//为了方便，将常用对象声明为变量
+var b2Vec2 = Box2D.Common.Math.b2Vec2;
+var b2BodyDef = Box2D.Dynamics.b2BodyDef;
+var b2Body = Box2D.Dynamics.b2Body;
+var b2FixtureDef = Box2D.Dynamics.b2FixtureDef;
+var b2Fixture = Box2D.Dynamics.b2Fixture;
+var b2World = Box2D.Dynamics.b2World;
+var b2PolygonShape = Box2D.Collision.Shapes.b2PolygonShape;
+var b2CircleShape = Box2D.Collision.Shapes.b2CircleShape;
+var b2DebugDraw = Box2D.Dynamics.b2DebugDraw;
+var b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
+
 (function(){
     var lastTime = 0;
     var vendors = ["ms","moz","webkit","0"];
@@ -330,7 +342,7 @@ var entities = {
             friction:1.5,
             restitution:0.4,
         },
-        "burger":{
+        "burger":{//汉堡
             shape:"circle",
             fullHealth:40,
             radius:25,
@@ -338,7 +350,7 @@ var entities = {
             friction:0.5,
             restitution:0.4,
         },
-        "sodacan":{
+        "sodacan":{//苏打罐
             shape:"rectangle",
             fullHealth:80,
             width:40,
@@ -347,7 +359,7 @@ var entities = {
             friction:0.5,
             restitution:0.7,
         },
-        "fries":{
+        "fries":{//薯条
             shape:"rectangle",
             fullHealth:50,
             width:40,
@@ -370,7 +382,7 @@ var entities = {
             friction:0.5,
             restitution:0.4,
         },
-        "strawberry":{
+        "strawberry":{//草莓
             shape:"circle",
             radius:15,
             density:2.0,
@@ -385,5 +397,69 @@ var entities = {
     //以物体、物体的位置和角度为参数，在游戏画面中绘制物体
     draw:function(entity,position,angle){
 
+    }
+}
+
+var box2d = {
+    scale:30,
+    init:function(){
+        //创建Box2d world对象，该对象将完成大部分物理计算
+        var gravity = new b2Vec2(0,9.8);//声明重力加速度为9.8m/s^2,方向向下
+        var allowSleep = true;//允许静止的物体进入休眠状态，休眠物体不参与物理仿真计算
+        box2d.world = new b2World(gravity,allowSleep);
+    },
+    createRectangle:function(entity,definition){
+        var bodyDef = new b2BodyDef;
+        if(entity.isStatic){
+            bodyDef.type = b2Body.b2_staticBody;
+        }else{
+            bodyDef.type = b2Body.b2_dynamicBody;
+        }
+        bodyDef.position.x = entity.x/box2d.scale;
+        bodyDef.position.y = entity.y/box2d.scale;
+
+        if(entity.angle){
+            bodyDef.angle = Math.PI*entity.angle/180;
+        }
+
+        var fixtureDef = new b2FixtureDef;
+        fixtureDef.density = definition.density;
+        fixtureDef.friction = definition.friction;
+        fixtureDef.restitution = definition.restitution;
+        fixtureDef.shape = new b2PolygonShape;
+        fixtureDef.shape.SetAsBox(entity.width/2/box2d.scale,entity.height/2/box2d.scale);
+
+        var body = box2d.world.CreateBody(bodyDef);
+        body.SetUserData(entity);
+
+        var fixture = body.CreateFixture(fixtureDef);
+        return body;
+
+    },
+    createCircle:function(entity,definition){
+        var bodyDef = new b2BodyDef;
+        if(entity.isStatic){
+            bodyDef.type = b2Body.b2_staticBody;
+        }else{
+            bodyDef.type = b2Body.b2_dynamicBody;
+        }
+        bodyDef.position.x = entity.x/box2d.scale;
+        bodyDef.position.y = entity.y/box2d.scale;
+
+        if(entity.angle){
+            bodyDef.angle = Math.PI*entity.angle/180;
+        }
+
+        var fixtureDef = new b2FixtureDef;
+        fixtureDef.density = definition.density;
+        fixtureDef.friction = definition.friction;
+        fixtureDef.restitution = definition.restitution;
+        fixtureDef.shape = new b2CircleShape(entity.radius/box2d.scale);
+
+        var body = box2d.world.CreateBody(bodyDef);
+        body.SetUserData(entity);
+
+        var fixture = body.CreateFixture(fixtureDef);
+        return body; 
     }
 }
