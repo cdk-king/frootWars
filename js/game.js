@@ -175,13 +175,52 @@ var levels = {
             //第一关
             foreground:"desert-foreground",
             background:"clouds-background",
-            entities:[]
+            entities:[
+                // 地面
+                { type: "ground", name: "dirt", x: 500, y: 440, width: 1000, height: 20, isStatic: true },
+                // 弹弓木框架
+                { type: "ground", name: "wood", x: 180, y: 390, width: 40, height: 80, isStatic: true },
+
+                { type: "block", name: "wood", x: 520, y: 375, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "glass", x: 520, y: 275, angle: 90, width: 100, height: 25 },
+                { type: "villain", name: "burger", x: 520, y: 200, calories: 590 },
+
+                { type: "block", name: "wood", x: 620, y: 375, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "glass", x: 620, y: 275, angle: 90, width: 100, height: 25 },
+                { type: "villain", name: "fries", x: 620, y: 200, calories: 420 },
+                
+                { type: "hero", name: "orange", x: 90, y: 410 },
+                { type: "hero", name: "apple", x: 150, y: 410 },
+            ]
         },
         {
             //第二关
             foreground:"desert-foreground",
             background:"clouds-background",
-            entities:[]
+            entities:[
+                // 地面
+                { type: "ground", name: "dirt", x: 500, y: 440, width: 1000, height: 20, isStatic: true },
+                // 弹弓木框架
+                { type: "ground", name: "wood", x: 190, y: 390, width: 30, height: 80, isStatic: true },
+
+                { type: "block", name: "wood", x: 850, y: 380, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "wood", x: 700, y: 380, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "wood", x: 550, y: 380, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "glass", x: 625, y: 316, width: 150, height: 25 },
+                { type: "block", name: "glass", x: 775, y: 316, width: 150, height: 25 },
+
+                { type: "block", name: "glass", x: 625, y: 252, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "glass", x: 775, y: 252, angle: 90, width: 100, height: 25 },
+                { type: "block", name: "wood", x: 700, y: 190, width: 150, height: 25 },
+
+                { type: "villain", name: "burger", x: 700, y: 152, calories: 590 },
+                { type: "villain", name: "fries", x: 625, y: 405, calories: 420 },
+                { type: "villain", name: "sodacan", x: 775, y: 400, calories: 150 },
+
+                { type: "hero", name: "strawberry", x: 30, y: 415 },
+                { type: "hero", name: "orange", x: 80, y: 405 },
+                { type: "hero", name: "apple", x: 140, y: 405 }
+            ]
         }
     ],
     //初始化关卡选择画面
@@ -205,18 +244,31 @@ var levels = {
 
     },
     load:function(number){
+        //关卡加载时，初始化Box2D世界
+        box2d.init();
+
+        //声明新的当前关卡对象
         game.currentLevel = {
             number:number,
             hero:[]
         };
         game.score = 0;
         document.getElementById("score").innerHTML = "Score: " + game.score;
+        game.currentHero = undefined;
         var level = levels.data[number];
+
         //加载背景、前景和弹弓图像
         game.currentLevel.backgroundImage = loader.loadImage("images/backgrounds/" + level.background + ".png");
         game.currentLevel.foregroundImage = loader.loadImage("images/backgrounds/" + level.foreground + ".png");
         game.slingshotImage = loader.loadImage("images/slingshot.png");
         game.slingshotFrontImage = loader.loadImage("images/slingshot-front.png");
+
+        //加载所有物体
+        for(var i = level.entities.length-1;i>=0;i--){
+            var entity = level.entities[i];
+            entities.create(entity);
+        }
+
         //一旦所有的图像加载完成，就调用game.start()函数
         if(loader.loaded){
             game.start();
