@@ -211,6 +211,12 @@ var game = {
                 game.mode = "load-next-hero";
             }
         }
+        if(game.mode == "level-success" || game.mode == "level=failure"){
+            if(game.panTo(0)){
+                game.ended = treu;
+                game.showEndingScreen();
+            }
+        }
     },
     animate:function(){
         //移动背景
@@ -277,7 +283,30 @@ var game = {
         var radiusSquared = Math.pow(game.currentHero.GetUserData().radius,2);
         return (distanceSquared <= radiusSquared);
     },
+    showEndingScreen:function(){
+        var playNextLevel = document.getElementById("playnextlevel");
+        var endingMessage = document.getElementById("endingmessage");
 
+        if(game.mode == "level-success"){
+            if(game.currentLevel.number<levels.data.length-1){
+                endingMessage.innerHTML = "Level Complete. Well Done!!!";
+                // More levels available. Show the play next level button
+                playNextLevel.style.display = "block";
+            }else{
+                endingMessage.innerHTML = "All Levels Complete. Well Done!!!";
+                // No more levels. Hide the play next level button
+                playNextLevel.style.display = "none";
+            }
+        }else if(game.mode == "level-failure"){
+            endingMessage.innerHTML = "Failed. Play Again?";
+            // Failed level. Hide the play next level button
+            playNextLevel.style.display = "none";
+        }
+        game.showScreen("endingscreen");
+
+        // Stop the background music when the game ends
+        //game.stopBackgroundMusic();
+    }
 
 }
 var levels = {

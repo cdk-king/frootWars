@@ -65,3 +65,53 @@
     top: 5px;
     right: 20px;
 }
+
+/* Ending Screen */
+
+#endingscreen {
+    text-align: center;
+    background: rgba(1, 1, 1, 0.3);
+}
+
+#endingscreen div {
+
+    /* Center the popup div within the screen */
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+
+
+    height: 250px;
+    width: 330px;
+
+    border: 1px solid gray;
+    border-radius: 25px;
+    background: rgba(1, 1, 1, 0.3);
+
+    padding: 10px 30px 40px 50px;
+
+    text-align: left;
+}
+
+.endingoption {
+    font: 20px "Comic Sans MS";
+    text-shadow: 0 0 2px black;
+    color: white;
+}
+
+#endingscreen p img {
+    top: 10px;
+    position: relative;
+    cursor: pointer;
+
+    padding-right: 20px;
+}
+
+#endingmessage {
+    font: 25px "Comic Sans MS";
+    text-shadow: 0 0 2px black;
+    color: yellow;
+    text-align: center;
+}
