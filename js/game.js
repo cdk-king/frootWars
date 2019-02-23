@@ -213,7 +213,7 @@ var game = {
         }
         if(game.mode == "level-success" || game.mode == "level=failure"){
             if(game.panTo(0)){
-                game.ended = treu;
+                game.ended = true;
                 game.showEndingScreen();
             }
         }
@@ -255,7 +255,16 @@ var game = {
             var entity = body.GetUserData();
 
             if(entity){
-                entities.draw(entity,body.GetPosition(),body.GetAngle());
+                var entityX = body.GetPosition().x*box2d.scale;
+                if(entityX<0 || entityX>game.currentLevel.foregroundImage.width || (entity.health && entity.health<0)){
+                    box2d.world.DestroyBody(body);
+                    if(entity.type == "villain"){
+                        game.score += entity.calories;
+                        document.getElementById("score").innerHTML = "Score: " + game.score;
+                    }
+                }else{
+                    entities.draw(entity,body.GetPosition(),body.GetAngle());
+                }  
             }
         }
     },
@@ -411,10 +420,11 @@ var levels = {
         }
 
         //一旦所有的图像加载完成，就调用game.start()函数
+        loader.onload = game.start;
         if(loader.loaded){
-            game.start();
+            //game.start();
         }else{
-            loader.onload = game.start();
+            //loader.onload = game.start;
         }
     }
 }
@@ -443,9 +453,11 @@ var loader = {
     loadImage:function(url){
         this.totalCount++;
         this.loaded = false;
+        //game.hideScreens();
         game.showScreen("loadingscreen");
         var image = new Image();
         image.src = url;
+        
         image.onload = loader.itemLoaded;
         return image;
     },
@@ -468,11 +480,14 @@ var loader = {
             //loader完成了资源加载
             loader.loaded = true;
             //隐藏加载页面
-            game.hideScreen("loadingscreen");
+            
+            //game.hideScreen("loadingscreen");
             //如果loader.onload事件有响应函数，调用
             if(loader.onload){
-                loader.onload();
-                loader.onload = undefined;
+                setTimeout(function(){
+                    loader.onload();
+                    loader.onload = undefined;
+                },1000);
             }
         }
     }
@@ -683,6 +698,27 @@ var box2d = {
             //设置调试绘图模式
             box2d.world.SetDebugDraw(debugDraw);
         
+        var listener = new Box2D.Dynamics.b2ContactListener;
+        listener.PostSolve = function(contact,impulse){
+            var body1 = contact.GetFixtureA().GetBody();
+            var body2 = contact.GetFixtureB().GetBody();
+            var entity1 = body1.GetUserData();
+            var entity2 = body2.GetUserData();
+
+            var impulseAlongNormal = Math.abs(impulse.normalImpulses[0]);
+            //监听器被调用的频率太高，过滤掉非常小的冲击
+            //尝试不同的值后，5似乎比较好
+            if(impulseAlongNormal>5){
+                //如果对象有生命值，用冲击值削弱生命值
+                if(entity1.health){
+                    entity1.health -= impulseAlongNormal;
+                }
+                if(entity2.health){
+                    entity2.health -= impulseAlongNormal;
+                }
+            }
+        }
+        box2d.world.SetContactListener(listener);
     },
     createRectangle:function(entity,definition){
         var bodyDef = new b2BodyDef;
