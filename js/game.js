@@ -131,25 +131,85 @@ var game = {
         }
         if(game.mode == "wait-for-firing"){
             if(mouse.dragging){
-                game.panTo(mouse.x+game.offsetLeft);
+                if(game.mouseOnCurrentHero()){
+                    game.mode = "firing"
+                }else{
+                    game.panTo(mouse.x+game.offsetLeft);
+                }           
             }else{
                 //弹弓位置
                 game.panTo(game.slingshotX);
             }
         }
         if(game.mode == "load-next-hero"){
-            //待完成
+            game.countHeroesAndVillains();
+
             //检查是否有坏蛋，如果没有，结束关卡
+            if(game.villains.length == 0){
+                game.mode = "level-success";
+                return;
+            }
+
             //检查是否有英雄，如果没有，结束关卡
-            //填装英雄，设置状态到wait-for-firing
-            game.mode = "wait-for-firing";
+            if(game.heros.length == 0){
+                game.mode = "level-failure";
+                return;
+            }
+
+            //加载英雄并设置模式为wait-for-firing
+            if(!game.currentHero){
+                game.currentHero = game.heros[game.heros.length-1];
+                game.currentHero.SetPosition(
+                    {
+                        x:180/box2d.scale,
+                        y:200/box2d.scale
+                    }
+                );
+                game.currentHero.SetLinearVelocity(
+                    {
+                        x:0,
+                        y:0
+                    }
+                );
+                game.currentHero.SetAngularVelocity(0);
+                game.currentHero.SetAwake(true);
+            }else{
+                //等待英雄结束弹跳并进入休眠，接着切换到wait-for-firing阶段
+                game.panTo(game.slingshotX);
+                if(!game.currentHero.IsAwake()){
+                    game.mode = "wait-for-firing";
+                }
+            }
         }
         if(game.mode == "firing"){
-            game.panTo(game.slingshotX);
+            if(mouse.down){
+                game.panTo(game.slingshotX);
+                game.currentHero.SetPosition(
+                    {
+                        x:(mouse.x+game.offsetLeft)/box2d.scale,
+                        y:mouse.y/box2d.scale
+                    }
+                );
+            }else{
+                //松手后
+                game.mode = "fired";
+                var impulseScaleFactor = 0.75;
+                var impulse = new b2Vec2((game.slingshotX+35-mouse.x-game.offsetLeft)*impulseScaleFactor,(game.slingshotY+25-mouse.y)*impulseScaleFactor);
+                game.currentHero.ApplyImpulse(impulse,game.currentHero.GetWorldCenter());//添加推力
+            }
         }
         if(game.mode == "fired"){
-            //待完成
             //视野移动到英雄
+            var heroX = game.currentHero.GetPosition().x*box2d.scale;
+            game.panTo(heroX);
+            //直到该英雄停止移动或移除边界
+            if(!game.currentHero.IsAwake() || heroX<0 || heroX>game.currentLevel.foregroundImage.width){
+                //然后删除旧的英雄
+                box2d.world.DestroyBody(game.currentHero);
+                game.currentHero = undefined;
+                //加载下一个英雄
+                game.mode = "load-next-hero";
+            }
         }
     },
     animate:function(){
@@ -192,7 +252,32 @@ var game = {
                 entities.draw(entity,body.GetPosition(),body.GetAngle());
             }
         }
-    }
+    },
+    countHeroesAndVillains:function(){
+        game.heros = [];
+        game.villains = [];
+        for(var body = box2d.world.GetBodyList();body;body = body.GetNext()){
+            var entity = body.GetUserData();
+            if(entity){
+                if(entity.type == "hero"){
+                    game.heros.push(body);
+                }else if(entity.type == "villain"){
+                    game.villains.push(body);
+                }
+            }
+        }
+    },
+    mouseOnCurrentHero:function(){
+        if(!game.currentHero){
+            return false;
+        }
+        var position = game.currentHero.GetPosition();
+        var distanceSquared = Math.pow(position.x*box2d.scale-mouse.x-game.offsetLeft,2) + 
+        Math.pow(position.y*box2d.scale-mouse.y,2);
+        var radiusSquared = Math.pow(game.currentHero.GetUserData().radius,2);
+        return (distanceSquared <= radiusSquared);
+    },
+
 
 }
 var levels = {
