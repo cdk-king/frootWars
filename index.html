@@ -33,14 +33,14 @@
             <div>
                 <p id="endingmessage">the level is over message</p>
                 <p id="playcurrentlevel">
-                    <img src="images/icons/prev.png" alt="">
+                    <img src="images/icons/prev.png" onclick="game.restartLevel()" alt="">
                     replay current level
                 </p>
                 <p id="playnextlevel">
-                    <img src="images/icons/next.png" alt="">play next level
+                    <img src="images/icons/next.png" onclick="game.startNextLevel()" alt="">play next level
                 </p>
                 <p id="showLevelScreen">
-                    <img src="images/icons/return.png" alt="">return to level screen
+                    <img src="images/icons/return.png" onclick="game.showLevelScreen()" alt="">return to level screen
                 </p>
             </div>
         </div>
