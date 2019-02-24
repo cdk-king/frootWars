@@ -239,6 +239,11 @@ var game = {
 
         //绘制所有的物体
         game.drawAllBodies();
+
+        //发射英雄时绘制橡胶带
+        if(game.mode == "firing"){
+            game.drawSlingshotBand();
+        }
         
         //再次绘制弹弓的外侧支架
         game.context.drawImage(game.slingshotFrontImage,game.slingshotX-game.offsetLeft,game.slingshotY);
@@ -315,6 +320,41 @@ var game = {
 
         // Stop the background music when the game ends
         //game.stopBackgroundMusic();
+    },
+    drawSlingshotBand:function(){
+        //暗棕色
+        game.context.strokeStyle = "rgb(68,31,11)";
+        //绘制一条粗线
+        game.context.lineWidth = 6;
+
+        //用英雄被拖拽的角度和半径计算英雄的末端，相对于英雄的中心
+        var radius = game.currentHero.GetUserData().radius;
+        var heroX = game.currentHero.GetPosition().x*box2d.scale;
+        var heroY = game.currentHero.GetPosition().y*box2d.scale;
+        var angle = Math.atan2(game.slingshotY+25-heroY,game.slingshotX+50-heroX);
+
+        var heroFarEdgeX = heroX - radius * Math.cos(angle);
+        var heroFarEdgeY = heroY - radius * Math.sin(angle);
+
+        game.context.beginPath();
+        //从弹弓顶端开始绘制（背面）
+        game.context.moveTo(game.slingshotX+50-game.offsetLeft,game.slingshotY+25);
+
+        //画到英雄的中心
+        game.context.lineTo(heroX-game.offsetLeft,heroY);
+        game.context.stroke();
+
+        //再次绘制英雄
+        entities.draw(game.currentHero.GetUserData(),game.currentHero.GetPosition(),game.currentHero.GetAngle());
+
+        game.context.beginPath();
+        //移动到英雄离弹弓顶部最远的边缘
+        game.context.moveTo(heroFarEdgeX-game.offsetLeft,heroFarEdgeY);
+        
+        //将线画会弹弓（正面）
+        game.context.lineTo(game.slingshotX-game.offsetLeft+10,game.slingshotY+30);
+        game.context.stroke();
+
     }
 
 }
