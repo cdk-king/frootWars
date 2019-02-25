@@ -96,6 +96,9 @@ var game = {
         //显示游戏画布和得分
         game.showScreen("gamecanvas");
         game.showScreen("scorescreen");
+
+        game.startBackgroundMusic();
+
         game.mode = "intro";
         game.offsetLeft = 0;
         game.ended = false;
@@ -325,6 +328,7 @@ var game = {
         return (distanceSquared <= radiusSquared);
     },
     showEndingScreen:function(){
+        game.stopBackgroundMusic();
         var playNextLevel = document.getElementById("playnextlevel");
         var endingMessage = document.getElementById("endingmessage");
 
@@ -417,7 +421,7 @@ var game = {
             game.lastFpsUpdateTime = currentTime;
             
 			//game.fpsElement.innerHTML = game.fps.toFixed(0) + ' fps';
-			console.log(game.fps.toFixed(0));
+			//console.log(game.fps.toFixed(0));
         }
         debugContext.beginPath();
         debugContext.font = 'bold 25px Arial';
@@ -432,7 +436,36 @@ var game = {
 		//console.log(now - this.lastAnimationFrameTime);
 		
 		return game.fps;
-	},
+    },
+    startBackgroundMusic: function() {
+        game.backgroundMusic.play();
+        game.setBackgroundMusicButton();
+    },
+    stopBackgroundMusic: function() {
+        game.backgroundMusic.pause();
+        // Go to the beginning of the song
+        game.backgroundMusic.currentTime = 0;
+
+        game.setBackgroundMusicButton();
+    },
+    toggleBackgroundMusic: function() {
+        if (game.backgroundMusic.paused) {
+            game.backgroundMusic.play();
+        } else {
+            game.backgroundMusic.pause();
+        }
+
+        game.setBackgroundMusicButton();
+    },
+    setBackgroundMusicButton: function() {
+        var toggleImage = document.getElementById("togglemusic");
+
+        if (game.backgroundMusic.paused) {
+            toggleImage.src = "images/icons/nosound.png";
+        } else {
+            toggleImage.src = "images/icons/sound.png";
+        }
+    },
 
 }
 var levels = {
