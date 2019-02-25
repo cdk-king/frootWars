@@ -207,6 +207,7 @@ var game = {
             }else{
                 //松手后
                 game.mode = "fired";
+                game.slingshotReleasedSound.play();
                 var impulseScaleFactor = 0.75;
                 var impulse = new b2Vec2((game.slingshotX+35-mouse.x-game.offsetLeft)*impulseScaleFactor,(game.slingshotY+25-mouse.y)*impulseScaleFactor);
                 game.currentHero.ApplyImpulse(impulse,game.currentHero.GetWorldCenter());//添加推力
@@ -289,6 +290,9 @@ var game = {
                     if(entity.type == "villain"){
                         game.score += entity.calories;
                         document.getElementById("score").innerHTML = "分数: " + game.score;
+                    }
+                    if(entity.braekSound){
+                        entity.braekSound.play();
                     }
                 }else{
                     entities.draw(entity,body.GetPosition(),body.GetAngle());
@@ -724,6 +728,7 @@ var entities = {
                 entity.fullHealth = definition.fullHealth;
                 entity.shape = "rectangle";
                 entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                entity.braekSound = game.braekSound[entity.name];
                 box2d.createRectangle(entity,definition);
                 break;
             case "ground"://简单的矩形
@@ -738,6 +743,7 @@ var entities = {
                 entity.fullHealth = definition.fullHealth;
                 entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
                 entity.shape = definition.shape;
+                entity.bounceSound = game.bounceSound;
                 if(definition.shape == "circle"){
                     entity.radius = definition.radius;
                     box2d.createCircle(entity,definition);
@@ -828,6 +834,13 @@ var box2d = {
                 }
                 if(entity2.health){
                     entity2.health -= impulseAlongNormal;
+                }
+                //如果物体具有弹跳音，则播放它
+                if(entity1.bounceSound){
+                    entity1.bounceSound.play();
+                }
+                if(entity2.bounceSound){
+                    entity2.bounceSound.play();
                 }
             }
         }
