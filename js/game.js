@@ -45,6 +45,18 @@ var game = {
         levels.init();
         loader.init();
         mouse.init();
+
+        //加载所有的音效及背景音乐
+        //由Gurdonark创作的“Kindergar”
+        //由创意公用授权条款授权http://ccmixter.org/files/gurdonark/26491
+        game.backgroundMusic = loader.loadSound("audio/gurdonark-kindergarten");
+
+        game.slingshotReleasedSound = loader.loadSound("audio/released");
+        game.bounceSound = loader.loadSound("audio/bounce");
+        game.braekSound = {
+            "glass":loader.loadSound("audio/glassbreak"),
+            "wood":loader.loadSound("audio/woodbreak")
+        };
         
         //隐藏所有游戏图层，显示开始画面
         game.hideScreens();
@@ -87,10 +99,12 @@ var game = {
         game.mode = "intro";
         game.offsetLeft = 0;
         game.ended = false;
+        game.fps = 0;
+        game.lastUpdateTime = new Date().getTime();
         game.animationFrame = window.requestAnimationFrame(game.animate,game.canvas);
     },
     //画面最大平移速度，单位为像素每帧
-    maxSpeed:3,
+    maxSpeed:5,
     //画面最大和最小平移范围
     minOffset:0,
     maxOffset:300,
@@ -211,7 +225,7 @@ var game = {
                 game.mode = "load-next-hero";
             }
         }
-        if(game.mode == "level-success" || game.mode == "level=failure"){
+        if(game.mode == "level-success" || game.mode == "level-failure"){
             if(game.panTo(0)){
                 game.ended = true;
                 game.showEndingScreen();
@@ -219,17 +233,18 @@ var game = {
         }
     },
     animate:function(){
+        var currentTime = new Date().getTime();
         //移动背景
         game.handlePanning();
 
         //使角色动起来
-        var currentTime = new Date().getTime();
+        
         var timeStep;
         if(game.lastUpdateTime){
             timeStep = (currentTime-game.lastUpdateTime)/1000;
             box2d.step(timeStep);
         }
-        game.lastUpdateTime = currentTime;
+        
 
         //使用视差滚动绘制背景
         game.context.drawImage(game.currentLevel.backgroundImage,game.offsetLeft/4,0,640,480,0,0,640,480);
@@ -248,6 +263,14 @@ var game = {
         //再次绘制弹弓的外侧支架
         game.context.drawImage(game.slingshotFrontImage,game.slingshotX-game.offsetLeft,game.slingshotY);
 
+
+        //绘制显示mode
+        game.drawDebugMode();
+        //显示帧数
+        game.drawDebugFPS();
+
+        game.lastUpdateTime = currentTime;
+        
         if(!game.ended){
             game.animationFrame = window.requestAnimationFrame(game.animate,game.canvas);
         }
@@ -265,7 +288,7 @@ var game = {
                     box2d.world.DestroyBody(body);
                     if(entity.type == "villain"){
                         game.score += entity.calories;
-                        document.getElementById("score").innerHTML = "Score: " + game.score;
+                        document.getElementById("score").innerHTML = "分数: " + game.score;
                     }
                 }else{
                     entities.draw(entity,body.GetPosition(),body.GetAngle());
@@ -303,16 +326,16 @@ var game = {
 
         if(game.mode == "level-success"){
             if(game.currentLevel.number<levels.data.length-1){
-                endingMessage.innerHTML = "Level Complete. Well Done!!!";
+                endingMessage.innerHTML = "关卡完成。做得好！！！！";
                 // More levels available. Show the play next level button
                 playNextLevel.style.display = "block";
             }else{
-                endingMessage.innerHTML = "All Levels Complete. Well Done!!!";
+                endingMessage.innerHTML = "已通关全部关卡。做得好！！！！";
                 // No more levels. Hide the play next level button
                 playNextLevel.style.display = "none";
             }
         }else if(game.mode == "level-failure"){
-            endingMessage.innerHTML = "Failed. Play Again?";
+            endingMessage.innerHTML = "失败。再来一次？";
             // Failed level. Hide the play next level button
             playNextLevel.style.display = "none";
         }
@@ -365,7 +388,47 @@ var game = {
         window.cancelAnimationFrame(game.animationFrame);
         game.lastUpdateTime = undefined;
         levels.load(game.currentLevel.number+1);
-    }
+    },
+    drawDebugMode:function(){
+        var debugContext = document.getElementById("debugcanvas").getContext("2d");
+        debugContext.beginPath();
+        debugContext.font = 'bold 25px Arial';
+        debugContext.textAlign = 'center';
+        debugContext.textBaseline = 'bottom';
+        debugContext.fillStyle = '#ccc';
+        //debugContext.strokeText("mode:"+game.mode, 150, 100);
+        debugContext.fillText("mode:"+game.mode, 150, 100);
+    },
+    
+    drawDebugFPS:function(){
+        var debugContext = document.getElementById("debugcanvas").getContext("2d");
+        var currentTime = new Date().getTime();
+        
+        if(!game.lastFpsUpdateTime){
+            game.lastFpsUpdateTime = currentTime;
+            game.calculateFps(currentTime);
+        }
+        if(currentTime - game.lastFpsUpdateTime > 1000) {
+            game.calculateFps(currentTime);
+            game.lastFpsUpdateTime = currentTime;
+            
+			//game.fpsElement.innerHTML = game.fps.toFixed(0) + ' fps';
+			console.log(game.fps.toFixed(0));
+        }
+        debugContext.beginPath();
+        debugContext.font = 'bold 25px Arial';
+        debugContext.textAlign = 'center';
+        debugContext.textBaseline = 'bottom';
+        //debugContext.strokeText("fps:"+game.fps.toFixed(0), 450, 100);
+        debugContext.fillStyle = '#ccc';
+        debugContext.fillText("fps:"+game.fps.toFixed(0), 450, 100);
+    },
+    calculateFps:function(now) {
+		game.fps = 1 / (now - game.lastUpdateTime) * 1000;
+		//console.log(now - this.lastAnimationFrameTime);
+		
+		return game.fps;
+	},
 
 }
 var levels = {
@@ -453,7 +516,7 @@ var levels = {
             hero:[]
         };
         game.score = 0;
-        document.getElementById("score").innerHTML = "Score: " + game.score;
+        document.getElementById("score").innerHTML = "分数: " + game.score;
         game.currentHero = undefined;
         var level = levels.data[number];
 
@@ -525,7 +588,7 @@ var loader = {
         // 加载此项目后，停止侦听其事件类型（加载或canPlayThrough）
         ev.target.removeEventListener(ev.type, loader.itemLoaded, false);
         loader.loadedCount++;
-        document.getElementById("loadingmessage").innerHTML = "Loaded " + loader.loadedCount + " of " + loader.totalCount;
+        document.getElementById("loadingmessage").innerHTML = "已加载 " + loader.loadedCount + " of " + loader.totalCount;
         if(loader.loadedCount == loader.totalCount){
             //loader完成了资源加载
             loader.loaded = true;
@@ -537,7 +600,7 @@ var loader = {
                 setTimeout(function(){
                     loader.onload();
                     loader.onload = undefined;
-                },1000);
+                },500);
             }
         }
     }
@@ -630,21 +693,21 @@ var entities = {
             shape:"circle",
             radius:25,
             density:1.5,
-            friction:0.5,
+            friction:0.8,
             restitution:0.4,
         },
         "orange":{
             shape:"circle",
             radius:25,
             density:1.5,
-            friction:0.5,
+            friction:0.8,
             restitution:0.4,
         },
         "strawberry":{//草莓
             shape:"circle",
             radius:15,
             density:2.0,
-            friction:0.5,
+            friction:0.8,
             restitution:0.4,
         }
     },
@@ -807,6 +870,8 @@ var box2d = {
         }
         bodyDef.position.x = entity.x/box2d.scale;
         bodyDef.position.y = entity.y/box2d.scale;
+        bodyDef.linearDamping = 0.3;
+        bodyDef.angularDamping = 1;
 
         if(entity.angle){
             bodyDef.angle = Math.PI*entity.angle/180;

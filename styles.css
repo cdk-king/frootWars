@@ -115,3 +115,14 @@
     color: yellow;
     text-align: center;
 }
+
+/*结束画面*/
+#playcurrentlevel{
+    color:white;
+}
+#playnextlevel{
+    color:white;
+}
+#showLevelScreen{
+    color:white;
+}
