@@ -35,9 +35,7 @@ var b2RevoluteJointDef = Box2D.Dynamics.Joints.b2RevoluteJointDef;
     }
 }());
 
-window.addEventListener("load", function() {
-    game.init();
-});
+
 var game = {
     //开始初始化对象，预先加载资源，并显示开始画面
     init:function(){
@@ -49,7 +47,7 @@ var game = {
         //加载所有的音效及背景音乐
         //由Gurdonark创作的“Kindergar”
         //由创意公用授权条款授权http://ccmixter.org/files/gurdonark/26491
-        game.backgroundMusic = loader.loadSound("audio/gurdonark-kindergarten");
+        game.backgroundMusic = loader.loadSound("audio/frog");
 
         game.slingshotReleasedSound = loader.loadSound("audio/released");
         game.bounceSound = loader.loadSound("audio/bounce");
@@ -214,6 +212,9 @@ var game = {
                 var impulseScaleFactor = 0.75;
                 var impulse = new b2Vec2((game.slingshotX+35-mouse.x-game.offsetLeft)*impulseScaleFactor,(game.slingshotY+25-mouse.y)*impulseScaleFactor);
                 game.currentHero.ApplyImpulse(impulse,game.currentHero.GetWorldCenter());//添加推力
+
+                // Make sure the hero can't keep rolling indefinitely
+                game.currentHero.SetAngularDamping(2);
             }
         }
         if(game.mode == "fired"){
@@ -235,6 +236,32 @@ var game = {
                 game.showEndingScreen();
             }
         }
+    },
+    scale: 1,//画面比例
+    resize:function(){
+        var maxWidth = window.innerWidth;
+        var maxHeight = window.innerHeight;
+        
+        var scale = Math.min(maxWidth / 640, maxHeight / 480);
+        console.log(maxWidth);
+        console.log(maxHeight);
+        console.log(scale);
+
+        var gameContainer = document.getElementById("gamecontainer");
+        gameContainer.style.transform = "translate(-50%, -50%) " + "scale(" + scale + ")";
+
+        //根据当前的比例我们可以设置的最大宽度是多少
+        var width = Math.max(640, Math.min(1024, maxWidth / scale ));
+
+        // 将此新宽度应用于游戏容器和游戏画布
+        gameContainer.style.width = width + "px";
+        
+        var gameCanvas = document.getElementById("gamecanvas");
+
+        gameCanvas.width = width;
+
+        game.scale = scale;
+
     },
     animate:function(){
         var currentTime = new Date().getTime();
@@ -654,6 +681,14 @@ var mouse = {
         canvas.addEventListener("mousedown", mouse.mousedownhandler, false);
         canvas.addEventListener("mouseup", mouse.mouseuphandler, false);
         canvas.addEventListener("mouseout", mouse.mouseuphandler, false);
+
+        // Handle touchmove separately
+        canvas.addEventListener("touchmove", mouse.touchmovehandler, false);
+
+        // Reuse mouse handlers for touchstart, touchend, touchcancel
+        canvas.addEventListener("touchstart", mouse.mousedownhandler, false);
+        canvas.addEventListener("touchend", mouse.mouseuphandler, false);
+        canvas.addEventListener("touchcancel", mouse.mouseuphandler, false);
     },
     mousemovehandler:function(ev){
         //getBoundingClientRect用于获取某个元素相对于视窗的位置集合。集合中有top, right, bottom, left等属性。
@@ -677,7 +712,20 @@ var mouse = {
         mouse.down = false;
         mouse.dragging = false;
         ev.preventDefault();
-    }
+    },
+    touchmovehandler: function(ev) {
+        var touch = ev.targetTouches[0];
+        var offset = game.canvas.getBoundingClientRect();
+
+        mouse.x = (touch.clientX - offset.left) / game.scale;
+        mouse.y = (touch.clientY - offset.top) / game.scale;
+
+        if (mouse.down) {
+            mouse.dragging = true;
+        }
+
+        ev.preventDefault();
+    },
 }
 
 var entities = {
@@ -698,7 +746,7 @@ var entities = {
         "dirt":{
             density:3.0,
             friction:1.5,
-            restitution:0.4,
+            restitution:0.2,
         },
         "burger":{//汉堡
             shape:"circle",
@@ -730,14 +778,14 @@ var entities = {
             shape:"circle",
             radius:25,
             density:1.5,
-            friction:0.8,
+            friction:0.5,
             restitution:0.4,
         },
         "orange":{
             shape:"circle",
             radius:25,
             density:1.5,
-            friction:0.8,
+            friction:0.5,
             restitution:0.4,
         },
         "strawberry":{//草莓
@@ -916,17 +964,19 @@ var box2d = {
         }
         bodyDef.position.x = entity.x/box2d.scale;
         bodyDef.position.y = entity.y/box2d.scale;
-        bodyDef.linearDamping = 0.3;
-        bodyDef.angularDamping = 1;
+        //bodyDef.linearDamping = 0.3;
+        //bodyDef.angularDamping = 1;
 
         if(entity.angle){
             bodyDef.angle = Math.PI*entity.angle/180;
         }
 
         var fixtureDef = new b2FixtureDef;
+
         fixtureDef.density = definition.density;
         fixtureDef.friction = definition.friction;
         fixtureDef.restitution = definition.restitution;
+
         fixtureDef.shape = new b2CircleShape(entity.radius/box2d.scale);
 
         var body = box2d.world.CreateBody(bodyDef);
@@ -945,3 +995,15 @@ var box2d = {
         box2d.world.Step(timeStep,8,3);
     }
 }
+
+window.addEventListener("load", function() {
+    game.resize();
+    game.init();
+});
+window.addEventListener("resize", function() {
+    game.resize();
+});
+//明确声明为不是被动的
+document.addEventListener("touchmove", function(ev) {
+    ev.preventDefault();
+},{ passive: false });
