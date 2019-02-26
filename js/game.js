@@ -115,13 +115,27 @@ var game = {
     score:0,
     //画面中心移动到newCenter
     panTo:function(newCenter){
-        var df = newCenter-game.offsetLeft-game.canvas.width/4;
-        if(Math.abs(df)>0 && game.offsetLeft <= game.maxOffset && game.offsetLeft >= game.minOffset){
-            var deltaX = Math.round(df/2);
+        game.maxOffset = game.currentLevel.backgroundImage.width - game.canvas.width;
+
+        // The current center of the screen is half the screen width from the left offset
+        var currentCenter = game.offsetLeft + game.canvas.width / 2;
+
+        if(Math.abs(newCenter - currentCenter) > 0 && game.offsetLeft <= game.maxOffset && game.offsetLeft >= game.minOffset){
+            // We will travel half the distance from the newCenter to currentCenter in each tick
+            // This will allow easing
+            var deltaX = (newCenter - currentCenter) / 2;
+
             if(deltaX && Math.abs(deltaX) > game.maxSpeed){
                 //Math.sign() 函数返回一个数字的符号, 指示数字是正数，负数还是零。
                 deltaX = game.maxSpeed * Math.abs(deltaX)/(deltaX);
             }
+
+            // And if we have almost reached the goal, just get to the ending in this turn
+            if (Math.abs(deltaX) <= 1) {
+                deltaX = (newCenter - currentCenter);
+            }
+
+            // Finally add the adjusted deltaX to offsetX so we move the screen by deltaX
             game.offsetLeft += deltaX;
         }else{
             return true;
@@ -154,6 +168,7 @@ var game = {
             }else{
                 //弹弓位置
                 game.panTo(game.slingshotX);
+                //game.panTo(500);
             }
         }
         if(game.mode == "load-next-hero"){
@@ -191,6 +206,7 @@ var game = {
             }else{
                 //等待英雄结束弹跳并进入休眠，接着切换到wait-for-firing阶段
                 game.panTo(game.slingshotX);
+                
                 if(!game.currentHero.IsAwake()){
                     game.mode = "wait-for-firing";
                 }
@@ -243,9 +259,6 @@ var game = {
         var maxHeight = window.innerHeight;
         
         var scale = Math.min(maxWidth / 640, maxHeight / 480);
-        console.log(maxWidth);
-        console.log(maxHeight);
-        console.log(scale);
 
         var gameContainer = document.getElementById("gamecontainer");
         gameContainer.style.transform = "translate(-50%, -50%) " + "scale(" + scale + ")";
@@ -259,7 +272,7 @@ var game = {
         var gameCanvas = document.getElementById("gamecanvas");
 
         gameCanvas.width = width;
-
+        
         game.scale = scale;
 
     },
@@ -278,8 +291,8 @@ var game = {
         
 
         //使用视差滚动绘制背景
-        game.context.drawImage(game.currentLevel.backgroundImage,game.offsetLeft/4,0,640,480,0,0,640,480);
-        game.context.drawImage(game.currentLevel.foregroundImage,game.offsetLeft,0,640,480,0,0,640,480);
+        game.context.drawImage(game.currentLevel.backgroundImage,game.offsetLeft/4,0,game.canvas.width,game.canvas.height,0,0,game.canvas.width,game.canvas.height);
+        game.context.drawImage(game.currentLevel.foregroundImage,game.offsetLeft,0,game.canvas.width,game.canvas.height,0,0,game.canvas.width,game.canvas.height);
         //绘制弹弓
         game.context.drawImage(game.slingshotImage,game.slingshotX-game.offsetLeft,game.slingshotY);
 
@@ -299,6 +312,8 @@ var game = {
         //game.drawDebugMode();
         //显示帧数
         //game.drawDebugFPS();
+        //显示中心位置
+        //game.drawDebugPosition();
 
         game.lastUpdateTime = currentTime;
         
@@ -432,9 +447,21 @@ var game = {
         debugContext.textBaseline = 'bottom';
         debugContext.fillStyle = '#ccc';
         //debugContext.strokeText("mode:"+game.mode, 150, 100);
-        debugContext.fillText("mode:"+game.mode, 150, 100);
+        debugContext.fillText("mode:"+game.mode, 150, 50);
     },
-    
+    drawDebugPosition:function(){
+        var debugContext = document.getElementById("debugcanvas").getContext("2d");
+        debugContext.beginPath();
+        debugContext.font = 'bold 25px Arial';
+        debugContext.textAlign = 'center';
+        debugContext.textBaseline = 'bottom';
+        debugContext.fillStyle = '#ccc';
+        //debugContext.strokeText("mode:"+game.mode, 150, 100);
+        debugContext.fillText("positionX:"+Math.round(game.canvas.width/2+game.offsetLeft), 150, 80);
+        debugContext.fillText("offsetLeft:"+Math.round(game.offsetLeft), 150, 110);
+        debugContext.fillText("width/2:"+game.canvas.width/2, 400, 80);
+        debugContext.fillText("scale:"+game.scale.toFixed(2), 400, 110);
+    },
     drawDebugFPS:function(){
         var debugContext = document.getElementById("debugcanvas").getContext("2d");
         var currentTime = new Date().getTime();
@@ -456,7 +483,7 @@ var game = {
         debugContext.textBaseline = 'bottom';
         //debugContext.strokeText("fps:"+game.fps.toFixed(0), 450, 100);
         debugContext.fillStyle = '#ccc';
-        debugContext.fillText("fps:"+game.fps.toFixed(0), 450, 100);
+        debugContext.fillText("fps:"+game.fps.toFixed(0), 400, 50);
     },
     calculateFps:function(now) {
 		game.fps = 1 / (now - game.lastUpdateTime) * 1000;
@@ -587,8 +614,12 @@ var levels = {
         //加载背景、前景和弹弓图像
         game.currentLevel.backgroundImage = loader.loadImage("images/backgrounds/" + level.background + ".png");
         game.currentLevel.foregroundImage = loader.loadImage("images/backgrounds/" + level.foreground + ".png");
-        game.slingshotImage = loader.loadImage("images/slingshot.png");
-        game.slingshotFrontImage = loader.loadImage("images/slingshot-front.png");
+        if(!game.slingshotImage){
+            game.slingshotImage = loader.loadImage("images/slingshot.png");
+        }
+        if(!game.slingshotFrontImage){
+            game.slingshotFrontImage = loader.loadImage("images/slingshot-front.png");
+        }
 
         //加载所有物体
         for(var i = level.entities.length-1;i>=0;i--){
@@ -693,8 +724,10 @@ var mouse = {
     mousemovehandler:function(ev){
         //getBoundingClientRect用于获取某个元素相对于视窗的位置集合。集合中有top, right, bottom, left等属性。
         var offset =  game.canvas.getBoundingClientRect();
-        mouse.x = ev.clientX - offset.left;
-        mouse.y = ev.clientY - offset.top;
+
+        mouse.x = (ev.clientX - offset.left) / game.scale;
+        mouse.y = (ev.clientY - offset.top) / game.scale;
+        
         if (mouse.down) {
             mouse.dragging = true;
         }
@@ -808,7 +841,9 @@ var entities = {
                 entity.health = definition.fullHealth;
                 entity.fullHealth = definition.fullHealth;
                 entity.shape = "rectangle";
-                entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                if(!entity.sprite){
+                    entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                } 
                 entity.braekSound = game.braekSound[entity.name];
                 box2d.createRectangle(entity,definition);
                 break;
@@ -822,7 +857,9 @@ var entities = {
             case "villain"://可以是圆形或者是矩形
                 entity.health = definition.fullHealth;
                 entity.fullHealth = definition.fullHealth;
-                entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                if(!entity.sprite){
+                    entity.sprite = loader.loadImage("images/entities/"+entity.name+".png");
+                }
                 entity.shape = definition.shape;
                 entity.bounceSound = game.bounceSound;
                 if(definition.shape == "circle"){
