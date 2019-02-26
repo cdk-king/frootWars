@@ -126,3 +126,9 @@
 #showLevelScreen{
     color:white;
 }
+
+/*调试canvas*/
+#debugcanvas{
+    /* border:1px solid black; */
+    display: none;
+}

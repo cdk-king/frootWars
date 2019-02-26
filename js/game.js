@@ -269,9 +269,9 @@ var game = {
 
 
         //绘制显示mode
-        game.drawDebugMode();
+        //game.drawDebugMode();
         //显示帧数
-        game.drawDebugFPS();
+        //game.drawDebugFPS();
 
         game.lastUpdateTime = currentTime;
         
@@ -848,7 +848,7 @@ var box2d = {
             //绘制所有的shape和joint
             debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
             //设置调试绘图模式
-            box2d.world.SetDebugDraw(debugDraw);
+            //box2d.world.SetDebugDraw(debugDraw);
         
         var listener = new Box2D.Dynamics.b2ContactListener;
         listener.PostSolve = function(contact,impulse){
