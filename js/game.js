@@ -683,7 +683,7 @@ var loader = {
         // 加载此项目后，停止侦听其事件类型（加载或canPlayThrough）
         ev.target.removeEventListener(ev.type, loader.itemLoaded, false);
         loader.loadedCount++;
-        document.getElementById("loadingmessage").innerHTML = "已加载 " + loader.loadedCount + " of " + loader.totalCount;
+        document.getElementById("loadingmessage").innerHTML = "已加载 " + loader.loadedCount + " 共 " + loader.totalCount;
         if(loader.loadedCount == loader.totalCount){
             //loader完成了资源加载
             loader.loaded = true;
@@ -693,6 +693,7 @@ var loader = {
             //如果loader.onload事件有响应函数，调用
             if(loader.onload){
                 setTimeout(function(){
+                    game.hideScreen("loadingscreen");
                     loader.onload();
                     loader.onload = undefined;
                 },500);
