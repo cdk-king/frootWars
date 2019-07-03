@@ -235,6 +235,7 @@ var game = {
         }
         if(game.mode == "fired"){
             //视野移动到英雄
+            //console.log(game.currentHero.GetPosition().x);
             var heroX = game.currentHero.GetPosition().x*box2d.scale;
             game.panTo(heroX);
             //直到该英雄停止移动或移除边界
@@ -533,7 +534,7 @@ var levels = {
                 // 地面
                 { type: "ground", name: "dirt", x: 500, y: 440, width: 1000, height: 20, isStatic: true },
                 // 弹弓木框架
-                { type: "ground", name: "wood", x: 190, y: 390, width: 30, height: 80, isStatic: true },
+                { type: "ground", name: "wood", x: 180, y: 360, width: 10, height: 20, isStatic: true },
 
                 { type: "block", name: "wood", x: 520, y: 380, angle: 90, width: 100, height: 25 },
                 { type: "block", name: "glass", x: 520, y: 280, angle: 90, width: 100, height: 25 },
@@ -555,7 +556,7 @@ var levels = {
                 // 地面
                 { type: "ground", name: "dirt", x: 500, y: 440, width: 1000, height: 20, isStatic: true },
                 // 弹弓木框架
-                { type: "ground", name: "wood", x: 190, y: 390, width: 30, height: 80, isStatic: true },
+                { type: "ground", name: "wood", x: 180, y: 360, width: 10, height: 20, isStatic: true },
 
                 { type: "block", name: "wood", x: 850, y: 380, angle: 90, width: 100, height: 25 },
                 { type: "block", name: "wood", x: 700, y: 380, angle: 90, width: 100, height: 25 },
@@ -934,7 +935,7 @@ var box2d = {
             //绘制所有的shape和joint
             debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
             //设置调试绘图模式
-            //box2d.world.SetDebugDraw(debugDraw);
+            box2d.world.SetDebugDraw(debugDraw);
         
         var listener = new Box2D.Dynamics.b2ContactListener;
         listener.PostSolve = function(contact,impulse){
@@ -1002,7 +1003,7 @@ var box2d = {
         }
         bodyDef.position.x = entity.x/box2d.scale;
         bodyDef.position.y = entity.y/box2d.scale;
-        //bodyDef.linearDamping = 0.3;
+        bodyDef.linearDamping = 0.3;
         //bodyDef.angularDamping = 1;
 
         if(entity.angle){
@@ -1035,11 +1036,11 @@ var box2d = {
 }
 
 window.addEventListener("load", function() {
-    game.resize();
+    //game.resize();
     game.init();
 });
 window.addEventListener("resize", function() {
-    game.resize();
+    //game.resize();
 });
 //明确声明为不是被动的
 document.addEventListener("touchmove", function(ev) {

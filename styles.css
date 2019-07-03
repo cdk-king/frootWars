@@ -22,7 +22,8 @@ body {
 #gamecontainer{
     width: 640px;
     height: 480px;
-    background: url(images/splashscreen.png);
+    /* background: url(images/splashscreen.png); */
+    background: url(images/水果战争.png);
     border: 1px solid black;  
     
         /* Set game container width, height and background */
@@ -30,7 +31,8 @@ body {
         height: 480px;
     
         /* Use a wider splash screen and center it within the container */
-        background: url("images/splashscreenwide.png");
+        /* 使用更宽的防溅屏并将其置于容器中心 */
+        /* background: url("images/splashscreenwide.png"); */
         background-position: center;
         background-repeat: no-repeat;
     
@@ -169,5 +171,5 @@ body {
 /*调试canvas*/
 #debugcanvas{
     /* border:1px solid black; */
-    display: none;
+    /* display: none; */
 }
